@@ -3,6 +3,7 @@ import "./helpers/Globals";
 import "p5/lib/addons/p5.sound";
 import * as p5 from "p5";
 import { Midi } from '@tonejs/midi'
+import { TetradicColourCalculator } from './functions/ColourCalculators';
 import PlayIcon from './functions/PlayIcon.js';
 import SaveJSONToFile from './functions/SaveJSONToFile.js';
 
@@ -67,24 +68,16 @@ const P5SketchWithAudio = () => {
         p.setup = () => {
             p.canvas = p.createCanvas(p.canvasWidth, p.canvasHeight);
             p.background(0);
-            // p.generateCells();
+            p.colorMode(p.HSB);
             p.cells = require('../json/grid-64x64.json');
             p.xSize = p.height / p.random([64, 48]);
             p.ySize = p.width / p.random([64, 48]);
             p.noFill();
-            p.stroke(p.random(255), p.random(255), p.random(255));
             p.strokeWeight(4);
             p.noLoop();
         }
 
         p.draw = () => {
-            
-            
-            p.cells.forEach(cell => {
-                const { x, y, loopIndex } = cell;
-                p.ellipse(p.xSize * x, p.xSize * y, p.xSize / 8, p.xSize / 8);
-            });
-
             if(p.audioLoaded && p.song.isPlaying()){
 
             }
@@ -147,14 +140,19 @@ const P5SketchWithAudio = () => {
 
             
 
-            p.xSize = p.height / p.random([128, 64, 32]);
-            p.ySize = p.width / p.random([128, 64, 32]);
+            p.xSize = p.height / p.random([64, 32, 16]) / 4;
+            p.ySize = p.width / p.random([64, 32, 16]) / 4;
 
             p.lines = [];
 
+            const baseHue = p.random(0, 360);
+            let colours = [];
+
             for (let i = 0; i < 32; i++) {
                 
+                
                 if(i > 0) {
+                    colours = TetradicColourCalculator(p, baseHue, 50 + 50 / 32 * i, 50 + 50 / 32 * i);
                     const numberOfLines = i * 2 + 1;
                     // connecting cell and top left
 
@@ -168,6 +166,7 @@ const P5SketchWithAudio = () => {
                             y1: y1,
                             x2: x2,
                             y2: y2,
+                            strokeColor: colours[0]
                         });
                     }
                     
@@ -183,6 +182,7 @@ const P5SketchWithAudio = () => {
                             y1: y1,
                             x2: x2,
                             y2: y2,
+                            strokeColor: colours[1]
                         });
                     }
 
@@ -197,6 +197,7 @@ const P5SketchWithAudio = () => {
                             y1: y1,
                             x2: x2,
                             y2: y2,
+                            strokeColor: colours[2]
                         });
                     }
 
@@ -211,6 +212,7 @@ const P5SketchWithAudio = () => {
                             y1: y1,
                             x2: x2,
                             y2: y2,
+                            strokeColor: colours[3]
                         });
                     }
                 }
@@ -221,13 +223,15 @@ const P5SketchWithAudio = () => {
                         y1: p.ySize * -1,
                         x2: p.xSize * 1,
                         y2: p.ySize * 0,
+                        strokeColor: p.color(p.random(0,255), p.random(0,255), p.random(0,255))
                     })
                     // bottom right
                     p.lines.push({
                         x1: p.xSize * 1,
                         y1: p.ySize * 0,
                         x2: p.xSize * 0,
-                        y2: p.ySize * 1
+                        y2: p.ySize * 1,
+                        strokeColor: p.color(p.random(0,255), p.random(0,255), p.random(0,255))
                     });
                     // bottom left
                     p.lines.push({
@@ -235,6 +239,7 @@ const P5SketchWithAudio = () => {
                         y1: p.ySize * 1,
                         x2: p.xSize * -1,
                         y2: p.ySize * 0,
+                        strokeColor: p.color(p.random(0,255), p.random(0,255), p.random(0,255))
                     });
                 }
             }
@@ -252,11 +257,18 @@ const P5SketchWithAudio = () => {
                 const delay = (duration * 1000 / lines.length) * 0.75;
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i],
-                        { x1, y1, x2, y2 } = line;
+                        { x1, y1, x2, y2, strokeColor } = line;
+                    
 
                     setTimeout(
                         function () {
                             p.translate(startX, startY);
+                            // p.stroke(
+                            //     p.random(0,255),
+                            //     p.random(0,255),
+                            //     p.random(0,255)
+                            // );
+                            p.stroke(strokeColor);
                             p.line(x1,y1,x2,y2);
                             p.translate(-startX, -startY);
                         },

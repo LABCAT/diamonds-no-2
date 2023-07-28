@@ -6,6 +6,7 @@ import { Midi } from '@tonejs/midi'
 import { TetradicColourCalculator } from './functions/ColourCalculators';
 import PlayIcon from './functions/PlayIcon.js';
 import SaveJSONToFile from './functions/SaveJSONToFile.js';
+import Diamond from './classes/Diamond.js';
 
 import audio from "../audio/diamonds-no-2.ogg";
 import midi from "../audio/diamonds-no-2.mid";
@@ -32,7 +33,9 @@ const P5SketchWithAudio = () => {
                 function(result) {
                     console.log(result);
                     const noteSet1 = result.tracks[2].notes; // Synth 1 - Sub Bass 2
+                    const noteSet2 = result.tracks[5].notes; // Synth 2 - Jupiter 4
                     p.scheduleCueSet(noteSet1, 'executeCueSet1');
+                    p.scheduleCueSet(noteSet2, 'executeCueSet2');
                     p.audioLoaded = true;
                     document.getElementById("loader").classList.add("loading--complete");
                     document.getElementById("play-icon").classList.remove("fade-out");
@@ -127,32 +130,36 @@ const P5SketchWithAudio = () => {
                 x: 3,
                 y: 3
             },
-        ]
+        ];
 
 
         p.executeCueSet1 = (note) => {
+
             const { currentCue, duration } = note;
+            p.background(0);
             if(currentCue % 4 === 1){
-                p.background(0);
+                
                 p.startingPositions = p.shuffle(p.startingPositions);
                 p.diamonds = [];
             }
 
             
 
-            p.xSize = p.height / p.random([64, 32, 16]) / 4;
-            p.ySize = p.width / p.random([64, 32, 16]) / 4;
+            p.xSize = p.height / p.random([80, 64, 32, 16, 8]) / 4;
+            p.ySize = p.width / p.random([80, 64, 32, 16, 8]) / 4;
 
             p.lines = [];
 
             const baseHue = p.random(0, 360);
             let colours = [];
 
+            p.strokeWeight(p.random([2,3,4]));
+
             for (let i = 0; i < 32; i++) {
                 
                 
                 if(i > 0) {
-                    colours = TetradicColourCalculator(p, baseHue, 50 + 50 / 32 * i, 50 + 50 / 32 * i);
+                    colours = TetradicColourCalculator(p, baseHue, 50 + 50 / 32 * i, 100 - 64 / 32 * i);
                     const numberOfLines = i * 2 + 1;
                     // connecting cell and top left
 
@@ -254,7 +261,7 @@ const P5SketchWithAudio = () => {
                     startX = p.width / 4 * x,
                     startY = p.height / 4 * y;
 
-                const delay = (duration * 1000 / lines.length) * 0.75;
+                const delay = (duration * 1000 / lines.length) * 0.6;
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i],
                         { x1, y1, x2, y2, strokeColor } = line;
@@ -263,11 +270,6 @@ const P5SketchWithAudio = () => {
                     setTimeout(
                         function () {
                             p.translate(startX, startY);
-                            // p.stroke(
-                            //     p.random(0,255),
-                            //     p.random(0,255),
-                            //     p.random(0,255)
-                            // );
                             p.stroke(strokeColor);
                             p.line(x1,y1,x2,y2);
                             p.translate(-startX, -startY);
@@ -277,6 +279,60 @@ const P5SketchWithAudio = () => {
                     
                 }
             });
+        }
+
+        p.currentMidi = 0;
+
+        p.sizeAdjuster = 3;
+
+        p.executeCueSet2 = (note) => {
+            const { currentCue, midi } = note;
+            p.sizeAdjuster = p.currentMidi === midi ? p.sizeAdjuster - 1 : 3;
+            p.currentMidi = midi;
+            const positions = [
+                {
+                    x: 7,
+                    y: 4
+                },
+                {
+                    x: 4,
+                    y: 7
+                },
+                {
+                    x: 1,
+                    y: 4
+                },
+                {
+                    x: 4,
+                    y: 1
+                },
+            ];
+
+            const location = [62, 59, 57, 60].indexOf(midi)
+
+            const diamond =  new Diamond(
+                    p,
+                    p.width / 8 * positions[location].x,
+                    p.height / 8  * positions[location].y,
+                    p.random(0, 360),
+                    p.width * p.sizeAdjuster, 
+                    100, 
+                    0
+                );
+            diamond.draw();
+
+            for (let i = 0; i < 1000; i++) {
+                 setTimeout(
+                    function () {
+                        diamond.update();
+                    },
+                    (1 * i)
+                );
+            }
+
+            console.log(note.midi);
+
+        
         }
 
         p.hasStarted = false;

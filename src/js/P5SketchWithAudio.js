@@ -138,9 +138,9 @@ const P5SketchWithAudio = () => {
             const { currentCue, duration } = note;
             p.background(0);
             if(currentCue % 4 === 1){
-                
                 p.startingPositions = p.shuffle(p.startingPositions);
-                p.diamonds = [];
+                p.bigDiamonds = [];
+                p.smallDiamonds = [];
             }
 
             
@@ -252,16 +252,16 @@ const P5SketchWithAudio = () => {
             }
 
             const diamondIndex = currentCue % 4 ? currentCue % 4 - 1 : 3; 
-            p.diamonds[diamondIndex] = p.lines;
+            p.bigDiamonds[diamondIndex] = p.lines;
 
-            p.diamonds.forEach((diamond, index) => {
+            p.bigDiamonds.forEach((diamond, index) => {
                 const lines = diamond, 
                     startingPos = p.startingPositions[index],
                     { x, y } = startingPos,
                     startX = p.width / 4 * x,
                     startY = p.height / 4 * y;
 
-                const delay = (duration * 1000 / lines.length) * 0.6;
+                const delay = (duration * 1000 / lines.length) * 0.5;
                 for (let i = 0; i < lines.length; i++) {
                     const line = lines[i],
                         { x1, y1, x2, y2, strokeColor } = line;
@@ -310,29 +310,22 @@ const P5SketchWithAudio = () => {
 
             const location = [62, 59, 57, 60].indexOf(midi)
 
-            const diamond =  new Diamond(
+            p.smallDiamonds.push(
+                new Diamond(
                     p,
                     p.width / 8 * positions[location].x,
                     p.height / 8  * positions[location].y,
                     p.random(0, 360),
-                    p.width * p.sizeAdjuster, 
+                    p.width / 2 * p.sizeAdjuster, 
                     100, 
                     0
-                );
-            diamond.draw();
+                )
+            );
+            
 
-            for (let i = 0; i < 1000; i++) {
-                 setTimeout(
-                    function () {
-                        diamond.update();
-                    },
-                    (1 * i)
-                );
-            }
-
-            console.log(note.midi);
-
-        
+            p.smallDiamonds.forEach((diamond) => {
+                diamond.draw();
+            });
         }
 
         p.hasStarted = false;
